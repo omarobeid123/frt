@@ -182,7 +182,7 @@
 			async function ensureProducts(){
 				if (productsCache) return productsCache;
 				productsCache = { products: [] };
-				const candidates = ['./products.json','products.json','products.json'];
+				const candidates = ['./products.xlsx','products.xlsx','products.xlsx'];
 				for (const p of candidates){
 					try{
 						const res = await fetch(p);
