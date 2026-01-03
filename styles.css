@@ -1,0 +1,60 @@
+body {
+	font-family: 'Alexandria', sans-serif;
+	text-align: center;
+	padding: 8px 20px 40px 20px;
+	background: #f5f5f5;
+}
+.hero {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 18px;
+	flex-wrap: wrap;
+}
+.subscriber-image img {
+	width: 140px;
+	height: 140px;
+	border-radius: 12px;
+	object-fit: cover;
+}
+h2 {
+	margin: 0;
+	font-size: 26px;
+}
+hr {
+	margin: 25px auto;
+	width: 95%;
+	border: 0;
+	height: 2px;
+	background: #ccc;
+}
+@media (max-width: 480px) {
+	.hero {
+		flex-direction: column;
+		gap: 12px;
+	}
+}
+.hero-title {
+	text-align: left;
+	display: flex;
+	flex-direction: column;
+	justify-content: end;
+	align-items: flex-start;
+}
+.hero-title .branch {
+	color: #888888;
+	margin-top: 10px;
+	font-size: 20px;
+	opacity: 0.9;
+}
+.scan-instruction {
+	color: #555;
+	font-size: 18px;
+	margin-top: 12px;
+	direction: rtl;
+	text-align: start;
+	opacity: 0.95;
+	font-weight: 850;
+	line-height: 1.8;
+}
+
