@@ -1,191 +1,475 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>اسواق تجربة</title>
-
-<style>
-body{font-family:Arial;margin:0;padding-bottom:60px;background:#f7f7f7}
-#jsonStatus{
-    position:fixed;
-    top:16px;
-    left:50%;
-    transform:translateX(-50%);
-    padding:10px 18px;
-    border-radius:10px;
-    font-weight:800;
-    z-index:10000;
-    display:none;
-    box-shadow:0 8px 22px rgba(0,0,0,.15);
-}
-.product-popup{
-    position:fixed;
-    bottom:90px;
-    left:50%;
-    transform:translateX(-50%);
-    background:#fff;
-    padding:12px 16px;
-    border-radius:12px;
-    box-shadow:0 10px 25px rgba(0,0,0,.2);
-    display:none;
-    z-index:9999;
-}
-.product-popup.show{display:block}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اسواق تجربة - بوابتك</title>
+     <link rel="icon" type="image/png" href="images/logo.png" />
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon" />
+	<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,700,0,0&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="styles.css">
+	<style>
+		.product-popup {
+			position: fixed;
+			left: 50%;
+			bottom: 120px;
+			transform: translateX(-50%);
+			min-width: 260px;
+			max-width: 92%;
+			background: linear-gradient(180deg,#ffffff,#f6fffb);
+			border-radius: 12px;
+			box-shadow: 0 10px 30px rgba(11,20,16,0.18);
+			padding: 12px 14px;
+			z-index: 9999;
+			display: none;
+			text-align: right;
+			direction: rtl;
+			border: 1px solid rgba(6,82,74,0.07);
+		}
+		.product-popup.show { display: block; }
+		.product-popup .title { font-weight:700; font-size:18px; color:#0b3b36; margin-bottom:6px; }
+		.product-popup .meta { color:#2b6b61; opacity:0.9; font-weight:600; }
+		.product-popup .price { color:#cf1010; font-weight:900; font-size:20px; margin-top:8px; }
+		.product-popup .closeBtn { position:absolute; left:10px; top:8px; background:transparent;border:none;color:#4b4b4b;font-weight:700;cursor:pointer }
+		.product-popup .not-found { color:#b22; font-weight:800 }
+	</style>
 </head>
 
 <body>
 
-<div id="jsonStatus"></div>
+<audio id="Beep" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
-<h3 style="text-align:center;margin:12px">📷 وجه الكاميرا نحو الباركود</h3>
+	<div class="hero">
+		<div class="subscriber-image">
+			<img src="https://cdn-icons-png.flaticon.com/512/3270/3270915.png" alt="اسواق تجربة">
+		</div>
+		<div class="hero-title">
+			<h2>اسواق تجربة</h2>
+			<p class="branch">● فرع طبربور</p>
+		</div>
+	</div>
 
-<video id="barcodeVideo" autoplay playsinline muted
-       style="width:100%;max-width:420px;margin:auto;display:block;border-radius:14px"></video>
+	<hr>
+	<p class="scan-instruction">* وجه الكاميرا الى باركود المنتج لمعرفه سعره</p>
 
-<canvas id="barcodeCanvas" style="display:none"></canvas>
+	<div id="scanner" style="margin-top:12px; display:flex;flex-direction:column;gap:12px;align-items:center;">
+        <div id="videoContainer" 
+            style="width:100%;max-width:420px;border-radius:20px;overflow:hidden;background:transparent;position:relative;aspect-ratio:16/9;">
+            <video id="barcodeVideo" autoplay playsinline muted 
+                style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;
+                transform:scale(0.96);border-radius:20px;">
+            </video>
+        </div>
 
-<div id="barcodeResult"
-     style="margin:12px auto;max-width:420px;background:#fff;
-     padding:12px;border-radius:10px;text-align:center;font-weight:800">
-</div>
+		<canvas id="barcodeCanvas" style="display:none"></canvas>
 
-<div id="productPopup" class="product-popup">
-    <div id="popupName"></div>
-    <div id="popupPrice" style="color:#c00;font-weight:900"></div>
-</div>
+		<div id="productPopup" class="product-popup" role="dialog" aria-live="polite" aria-hidden="true">
+			<button id="popupClose" class="closeBtn" aria-label="اغلاق">✕</button>
+			<div id="popupContent">
+				<div class="title" id="popupName">اسم المنتج</div>
+				<div class="meta" id="popupBarcode">باركود: <span></span></div>
+				<div class="price" id="popupPrice">سعر: <span></span> د.أ</div>
+			</div>
+		</div>
+
+		<div id="barcodeResult" aria-live="polite"
+			style="min-height:48px;padding:10px 14px;border-radius:8px;background:#fff;border:1px solid #e6e6e6;
+			width:100%;max-width:420px;text-align:center;font-weight:700;color:#0b3b36;">
+		</div>
+
+		<div id="cartContainer" style="width:100%;max-width:420px;margin-top:12px;text-align:right;direction:rtl;">
+		</div>
+
+        
+	</div>
+	<footer class="site-footer" role="contentinfo" aria-label="Footer">
+    <a href="https://bwtk-jo.web.app" target="_blank" style="color: inherit; text-decoration: none;">
+        Powered by bwtk-jo
+    </a>
+</footer>
+
+</body>
 
 <script>
 (function(){
+	const video = document.getElementById('barcodeVideo');
+	const resultEl = document.getElementById('barcodeResult');
+	const canvas = document.getElementById('barcodeCanvas');
+	const ctx = canvas.getContext && canvas.getContext('2d');
 
-const CLOUDINARY_JSON_URL =
- 'https://res.cloudinary.com/bwabtak/raw/upload/v1767405761/_byleqs.json';
+	let stream = null;
+	let useBack = true;
+	let detector = null;
+	let productsCache = null;
+	let popupTimer = null;
 
-const video = document.getElementById('barcodeVideo');
-const canvas = document.getElementById('barcodeCanvas');
-const ctx = canvas.getContext('2d');
-const resultEl = document.getElementById('barcodeResult');
+	async function requestCamera(){
+		const constraints = { video: { facingMode: useBack ? { ideal: 'environment' } : 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
+		try{
+			stream = await navigator.mediaDevices.getUserMedia(constraints);
+			video.srcObject = stream;
+			await video.play();
+		}catch(e){
+			setTimeout(() => {
+				if (!video.srcObject) {
+					alert('فشل فتح الكاميرا — تأكد من منح الإذن أو أن المتصفح يدعم الوصول للكاميرا.');
+				}
+			}, 800);
+		}		
+	}
 
-let detector = null;
-let stream = null;
-let productsCache = null;
+	async function createDetector(){
+		if ('BarcodeDetector' in window) {
+			const supported = await window.BarcodeDetector.getSupportedFormats().catch(()=>[]);
+			const formats = supported.length ? supported : ['qr_code','ean_13','code_128','code_39','upc_a','upc_e'];
+			try{ detector = new BarcodeDetector({ formats }); }catch(e){}
+		}
+	}
 
-/* ---------- UI ---------- */
-function showJsonStatus(msg, ok=true){
-    const el = document.getElementById('jsonStatus');
-    el.textContent = msg;
-    el.style.background = ok ? '#e6fff3' : '#ffe6e6';
-    el.style.color = ok ? '#0b8b73' : '#b00020';
-    el.style.display = 'block';
-    setTimeout(()=>el.style.display='none',4000);
-}
+	async function scanNow(){
+		if (!stream || !video || video.readyState < video.HAVE_CURRENT_DATA) return;
 
-function normalizeDigits(v){
-    return String(v||'').replace(/[^\d]/g,'');
-}
+		await createDetector();
+		canvas.width = video.videoWidth || 640;
+		canvas.height = video.videoHeight || 480;
+		if (ctx) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-/* ---------- LOAD JSON ---------- */
-async function ensureProducts(){
-    if(productsCache) return productsCache;
+		if (detector){
+			try{
+				const barcodes = await detector.detect(canvas);
+				if (barcodes && barcodes.length){
+					const items = barcodes.map(b => b.rawValue);
+					const first = String(items[0] || '').trim();
+					resultEl.textContent = first;
 
-    try{
-        const res = await fetch(CLOUDINARY_JSON_URL,{cache:'no-store'});
-        if(!res.ok) throw new Error('HTTP '+res.status);
+					document.getElementById("Beep").play();
+
+					resultEl.style.background = '#e9f6f2';
+					setTimeout(()=>resultEl.style.background='#fff',900);
+
+					lookupAndShow(first);
+					return;
+				}
+			}catch(e){}
+		}
+
+		if (window.Quagga && window.Quagga.decodeSingle){
+			window.Quagga.decodeSingle({
+				src: canvas.toDataURL('image/jpeg'),
+				numOfWorkers: 0,
+				decoder: { readers:['code_128_reader','ean_reader','ean_13_reader','upc_reader','code_39_reader'] }
+			}, function(result){
+
+				if (result && result.codeResult){
+					const code = String(result.codeResult.code || '').trim();
+					resultEl.textContent = code;
+
+					document.getElementById("Beep").play();
+
+					resultEl.style.background='#e9f6f2';
+					setTimeout(()=>resultEl.style.background='#fff',900);
+
+					lookupAndShow(code);
+
+				}else{
+					resultEl.textContent = 'لم يتم الكشف عن باركود — حاول الاقتراب من الباركود';
+
+				}
+			});
+		}
+
+			async function ensureProducts(){
+    if (productsCache) return productsCache;
+
+    const CLOUDINARY_JSON_URL =
+        'https://res.cloudinary.com/bwabtak/raw/upload/v1767405761/%D8%A7_byleqs.json';
+
+    try {
+        const res = await fetch(CLOUDINARY_JSON_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('فشل تحميل ملف المنتجات');
 
         const json = await res.json();
 
-        if(Array.isArray(json)){
+        // ✅ إذا كان Array مباشر
+        if (Array.isArray(json)) {
             productsCache = { products: json };
-        }else if(json && Array.isArray(json.products)){
+        }
+        // ✅ إذا كان Object فيه products
+        else if (json && Array.isArray(json.products)) {
             productsCache = json;
-        }else{
-            throw new Error('صيغة غير مدعومة');
+        }
+        // ❌ أي شيء آخر
+        else {
+            console.error('صيغة JSON غير مدعومة');
+            productsCache = { products: [] };
         }
 
-        showJsonStatus(`تم تحميل ${productsCache.products.length} منتج بنجاح`,true);
-
-    }catch(e){
-        console.error(e);
+    } catch (err) {
+        console.error('خطأ تحميل المنتجات:', err);
         productsCache = { products: [] };
-        showJsonStatus('❌ فشل تحميل ملف المنتجات',false);
     }
 
     return productsCache;
 }
 
-/* ---------- BARCODE ---------- */
-async function createDetector(){
-    if('BarcodeDetector' in window && !detector){
-        detector = new BarcodeDetector({
-            formats:['ean_13','code_128','upc_a','upc_e']
-        });
+
+			function normalizeDigits(s){ return String(s||'').replace(/[^0-9]/g,''); }
+
+			async function lookupBarcode(code){
+				const list = (await ensureProducts()).products || [];
+                
+				let found = list.find(p => String(p.barcode) === String(code));
+				if (found) { return { product: found, method: 'exact' }; }
+				const num = normalizeDigits(code);
+				if (num){
+					found = list.find(p => normalizeDigits(p.barcode) === num);
+					if (found) { return { product: found, method: 'numeric' }; }
+				}
+				if (num && num.length > 4){
+					const last8 = num.slice(-8);
+					found = list.find(p => normalizeDigits(p.barcode).endsWith(last8));
+					if (found) { return { product: found, method: 'suffix' }; }
+				}
+
+				if (code && code.length > 2){
+					found = list.find(p => String(p.barcode).includes(code) || code.includes(String(p.barcode)));
+					if (found) { return { product: found, method: 'substring' }; }
+				}
+                
+				return { product: null, method: 'none' };
+			}
+
+			async function lookupAndShow(code){
+				const popup = document.getElementById('productPopup');
+				const nameEl = document.getElementById('popupName');
+				const barcodeEl = document.getElementById('popupBarcode').querySelector('span');
+				const priceEl = document.getElementById('popupPrice').querySelector('span');
+
+				const lookup = await lookupBarcode(code);
+				const product = lookup && lookup.product ? lookup.product : null;
+				const method = lookup && lookup.method ? lookup.method : 'none';
+                
+				if (!product){
+					nameEl.textContent = 'لم يتم العثور على المنتج — حاول مرة أخرى';
+					barcodeEl.textContent = code || '-';
+					priceEl.textContent = '-';
+					popup.classList.add('show'); popup.setAttribute('aria-hidden','false');
+					popup.querySelector('#popupContent').classList.add('not-found');
+					resetPopupAutoHide();
+					try{ if (typeof showScanPreview === 'function') showScanPreview(lookup, code); }catch(e){}
+					try{ document.getElementById('barcodeResult')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }catch(e){}
+					return;
+				}
+
+				if (method !== 'exact'){
+					nameEl.textContent = 'لا يوجد تطابق تام — حاول مرة أخرى';
+					barcodeEl.textContent = code || '-';
+					priceEl.textContent = '-';
+					popup.classList.add('show'); popup.setAttribute('aria-hidden','false');
+					popup.querySelector('#popupContent').classList.add('not-found');
+					resetPopupAutoHide();
+					try{ if (typeof showScanPreview === 'function') showScanPreview(lookup, code); }catch(e){}
+					try{ document.getElementById('barcodeResult')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }catch(e){}
+					return;
+				}
+
+				popup.querySelector('#popupContent').classList.remove('not-found');
+				nameEl.textContent = product.name || 'اسم غير معلوم';
+				barcodeEl.textContent = product.barcode || code;
+				priceEl.textContent = product.price || '-';
+				popup.classList.add('show'); popup.setAttribute('aria-hidden','false');
+				try{ if (typeof showScanPreview === 'function') showScanPreview(lookup, code); }catch(e){}
+				try{ document.getElementById('barcodeResult')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }catch(e){}
+				resetPopupAutoHide();
+			}
+
+			function hideProductPopup(){
+				const popup = document.getElementById('productPopup');
+				if (!popup) return;
+				popup.classList.remove('show'); popup.setAttribute('aria-hidden','true');
+			}
+
+			function resetPopupAutoHide(){
+				if (popupTimer) clearTimeout(popupTimer);
+				popupTimer = setTimeout(()=> hideProductPopup(), 4500);
+			}
+
+			document.getElementById('popupClose').addEventListener('click', ()=> hideProductPopup());
+		}
+
+		const resultHolder = document.getElementById('barcodeResult');
+		const cartContainer = document.getElementById('cartContainer');
+		let cart = [];
+
+		function formatPrice(v){
+			if (v === undefined || v === null || v === '') return '-';
+			const n = parseFloat(String(v).replace(/[^0-9.,-]+/g,'').replace(',', '.'));
+			if (Number.isNaN(n)) return '-';
+			return (+n).toFixed(2);
+		}
+
+		function escapeHtml(s){ if (!s) return ''; return String(s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;" }[c]; }); }
+
+		function showScanPreview(lookup, rawCode){
+			if (!lookup || !lookup.product){ resultHolder.innerHTML = `<div style="padding:8px 6px;font-weight:800;color:#b22">لم يتم العثور على المنتج — ${rawCode||''}</div>`; return; }
+			const product = lookup.product;
+			if (lookup.method !== 'exact') { resultHolder.innerHTML = `<div style="padding:8px 6px;font-weight:800;color:#b22">لا يوجد تطابق تام — ${rawCode||''}</div>`; return; }
+
+			const name = product.name || 'اسم غير معلوم';
+			const price = formatPrice(product.price) || '-';
+
+			resultHolder.innerHTML = `\
+				<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;">\
+					<div style="text-align:right;flex:1;">\
+						<div style="font-weight:900;color:#0b3b36;font-size:16px;">${escapeHtml(name)}</div>\
+						<div style="margin-top:4px;color:#cf1010;font-weight:800;">${price} د.أ</div>\
+					</div>\
+					<div style="min-width:112px;text-align:left;">\
+						<button class="addBtn" data-barcode="${escapeHtml(product.barcode||rawCode)}" style="background:#0b8b73;color:#fff;padding:8px 12px;border-radius:8px;border:none;font-weight:900;cursor:pointer;">اضافة</button>\
+					</div>\
+				</div>`;
+
+			const btn = resultHolder.querySelector('.addBtn'); if (btn) btn.addEventListener('click', ()=> addProductToCart(product));
+		}
+
+		function addProductToCart(product){
+			const barcode = String(product.barcode || '');
+			const name = product.name || 'غير معروف';
+			const price = Number(parseFloat(String(product.price || 0).replace(/[^0-9.,-]+/g,'').replace(',', '.'))) || 0;
+
+			const existing = cart.find(it=>String(it.barcode)===barcode);
+			if (existing){ existing.qty += 1; }
+			else { cart.push({ barcode, name, price, qty: 1 }); }
+
+			renderCart();
+			resultHolder.style.background = '#ecffef'; setTimeout(()=>resultHolder.style.background='#fff',650);
+		}
+
+		function renderCart(){
+    if (!cart || !cart.length){
+        cartContainer.innerHTML = '<div style="padding:8px;border-radius:6px;border:1px dashed #e2e2e2;background:#fff;">سلة المشتريات فارغة</div>';
+        return;
     }
+
+    let html = `
+    <table style="width:100%;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e6e6e6;font-weight:700;text-align:right;direction:rtl;">
+        <thead style="background:#f8f8f8;color:#333;font-weight:900;">
+            <tr>
+                <th style="padding:8px;">المنتج</th>
+                <th style="padding:8px;width:88px;">السعر</th>
+                <th style="padding:8px;width:110px;">الكمية</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+
+   cart.forEach((it, idx)=>{
+    const isLast = idx === cart.length - 1;
+    html += `
+        <tr data-index="${idx}">
+            <td style="padding:8px; border-bottom:${isLast ? 'none' : '1px solid #dcdcdc'};">
+                ${escapeHtml(it.name)}
+            </td>
+            <td style="padding:8px; color:#cf1010; border-bottom:${isLast ? 'none' : '1px solid #dcdcdc'};">
+                ${it.price.toFixed(2)} د.أ
+            </td>
+			<td style="padding:8px; text-align:center; border-bottom:${isLast ? 'none' : '1px solid #dcdcdc'};">
+				<div style="
+					display:flex;
+					align-items:center;
+					justify-content:center;
+					flex-wrap:nowrap;
+					white-space:nowrap;
+					gap:6px;
+				">
+					<button class="qtyDec" data-idx="${idx}" 
+						style="padding:5px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer;">
+						-
+					</button>
+
+					<span style="min-width:24px; display:inline-block; text-align:center;">
+						${it.qty}
+					</span>
+
+					<button class="qtyInc" data-idx="${idx}" 
+						style="padding:5px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer;">
+						+
+					</button>
+				</div>
+			</td>
+        </tr>
+    `;
+});
+
+
+    html += `
+        </tbody>
+
+        <tfoot>
+            <tr>
+                <td colspan="3" style="padding:0;">
+                    <div style="width:100%;height:1px;background:#d9d9d9;"></div>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:12px;text-align:right;font-weight:900;">المجموع</td>
+                <td style="padding:12px;color:#0b3b36;font-weight:900;">${cart.reduce((s,it)=>s+(it.price*it.qty),0).toFixed(2)} د.أ</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    `;
+
+    cartContainer.innerHTML = html;
+
+    cartContainer.querySelectorAll('.qtyInc').forEach(btn =>
+        btn.addEventListener('click', () => changeQty(Number(btn.dataset.idx), +1))
+    );
+    cartContainer.querySelectorAll('.qtyDec').forEach(btn =>
+        btn.addEventListener('click', () => changeQty(Number(btn.dataset.idx), -1))
+    );
 }
 
-async function lookupBarcode(code){
-    const list = (await ensureProducts()).products;
-    const scanned = normalizeDigits(code);
 
-    for(const p of list){
-        const pc = normalizeDigits(p.barcode);
-        if(!pc) continue;
+		function changeQty(index, delta){ if (!cart[index]) return; const newQty = (cart[index].qty || 0) + delta; if (newQty <= 0){ removeFromCart(index); return; } cart[index].qty = newQty; renderCart(); }
+		function removeFromCart(index){ if (!cart[index]) return; cart.splice(index, 1); renderCart(); }
 
-        if(pc === scanned || pc.endsWith(scanned) || scanned.endsWith(pc)){
-            return p;
-        }
-    }
-    return null;
-}
+		renderCart();
 
-function showProduct(p){
-    const popup = document.getElementById('productPopup');
-    document.getElementById('popupName').textContent = p.name;
-    document.getElementById('popupPrice').textContent = p.price + ' د.أ';
-    popup.classList.add('show');
-    setTimeout(()=>popup.classList.remove('show'),4000);
-}
-
-/* ---------- CAMERA ---------- */
-async function startCamera(){
-    stream = await navigator.mediaDevices.getUserMedia({
-        video:{facingMode:'environment'}
+	requestCamera();
+	
+	function continuousScan(){
+    scanNow().finally(()=>{
+        requestAnimationFrame(continuousScan);
     });
-    video.srcObject = stream;
 }
 
-async function scan(){
-    if(!video.videoWidth) return;
-    await createDetector();
+requestCamera().then(()=>{
+    continuousScan();
+});
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video,0,0);
+	ensureProducts().catch(()=>{});
 
-    if(detector){
-        const codes = await detector.detect(canvas);
-        if(codes.length){
-            const code = codes[0].rawValue;
-            resultEl.textContent = code;
-
-            const product = await lookupBarcode(code);
-            if(product){
-                showProduct(product);
-            }else{
-                resultEl.textContent = '❌ لا يوجد منتج';
-            }
-        }
-    }
-}
-
-/* ---------- INIT ---------- */
-startCamera();
-ensureProducts();
-
-setInterval(scan,800);
-
+	if (!('BarcodeDetector' in window)){
+		const s = document.createElement('script');
+		s.src = 'https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js';
+		s.async = true;
+		document.head.appendChild(s);
+	}
 })();
 </script>
 
-</body>
+<style>
+	.site-footer{
+		position:fixed;
+		left:0; right:0; bottom:0;
+		height:38px; display:flex; align-items:center; justify-content:center;
+		background:rgba(255,255,255,0.94); color:#0b3b36; font-weight:700; font-size:13px;
+		box-shadow:0 -1px 8px rgba(0,0,0,0.06); z-index:9998; direction:rtl;
+	}
+	@media (min-width:320px){
+		body { padding-bottom:48px; }
+	}
+</style>
 </html>
