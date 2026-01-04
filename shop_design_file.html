@@ -180,32 +180,38 @@
 		}
 
 			async function ensureProducts(){
-				if (productsCache) return productsCache;
+    if (productsCache) return productsCache;
 
-				const CLOUDINARY_JSON_URL =
-					'https://res.cloudinary.com/bwabtak/raw/upload/v1767405761/%D8%A7_byleqs.json';
+    const CLOUDINARY_JSON_URL =
+        'https://res.cloudinary.com/bwabtak/raw/upload/v1767405761/%D8%A7_byleqs.json';
 
-				try {
-					const res = await fetch(CLOUDINARY_JSON_URL, { cache: 'no-store' });
-					if (!res.ok) throw new Error('فشل تحميل ملف المنتجات');
+    try {
+        const res = await fetch(CLOUDINARY_JSON_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('فشل تحميل ملف المنتجات');
 
-					const json = await res.json();
+        const json = await res.json();
 
-					// نفس البنية المطلوبة
-					if (json && Array.isArray(json.products)) {
-						productsCache = json;
-					} else {
-						productsCache = { products: [] };
-						console.error('بنية JSON غير صحيحة');
-					}
+        // ✅ إذا كان Array مباشر
+        if (Array.isArray(json)) {
+            productsCache = { products: json };
+        }
+        // ✅ إذا كان Object فيه products
+        else if (json && Array.isArray(json.products)) {
+            productsCache = json;
+        }
+        // ❌ أي شيء آخر
+        else {
+            console.error('صيغة JSON غير مدعومة');
+            productsCache = { products: [] };
+        }
 
-				} catch (err) {
-					console.error('خطأ في تحميل المنتجات:', err);
-					productsCache = { products: [] };
-				}
+    } catch (err) {
+        console.error('خطأ تحميل المنتجات:', err);
+        productsCache = { products: [] };
+    }
 
-				return productsCache;
-			}
+    return productsCache;
+}
 
 
 			function normalizeDigits(s){ return String(s||'').replace(/[^0-9]/g,''); }
