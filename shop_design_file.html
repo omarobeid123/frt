@@ -1,7 +1,54 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اسواق تجربة - بوابتك</title>
+     <link rel="icon" type="image/png" href="images/logo.png" />
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon" />
+	<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,700,0,0&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="styles.css">
+	<style>
+		.product-popup {
+			position: fixed;
+			left: 50%;
+			bottom: 120px;
+			transform: translateX(-50%);
+			min-width: 260px;
+			max-width: 92%;
+			background: linear-gradient(180deg,#ffffff,#f6fffb);
+			border-radius: 12px;
+			box-shadow: 0 10px 30px rgba(11,20,16,0.18);
+			padding: 12px 14px;
+			z-index: 9999;
+			display: none;
+			text-align: right;
+			direction: rtl;
+			border: 1px solid rgba(6,82,74,0.07);
+		}
+		.product-popup.show { display: block; }
+		.product-popup .title { font-weight:700; font-size:18px; color:#0b3b36; margin-bottom:6px; }
+		.product-popup .meta { color:#2b6b61; opacity:0.9; font-weight:600; }
+		.product-popup .price { color:#cf1010; font-weight:900; font-size:20px; margin-top:8px; }
+		.product-popup .closeBtn { position:absolute; left:10px; top:8px; background:transparent;border:none;color:#4b4b4b;font-weight:700;cursor:pointer }
+		.product-popup .not-found { color:#b22; font-weight:800 }
+	</style>
+</head>
+
+<body>
 
 <audio id="Beep" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+	<div class="hero">
+		<div class="subscriber-image">
+			<img src="https://cdn-icons-png.flaticon.com/512/3270/3270915.png" alt="اسواق تجربة">
+		</div>
+		<div class="hero-title">
+			<h2>اسواق تجربة</h2>
+			<p class="branch">● فرع طبربور</p>
+		</div>
+	</div>
 
 	<hr>
 	<p class="scan-instruction">* وجه الكاميرا الى باركود المنتج لمعرفه سعره</p>
@@ -134,21 +181,32 @@
 
 			async function ensureProducts(){
 				if (productsCache) return productsCache;
-				productsCache = { products: [] };
-				const candidates = ['https://res.cloudinary.com/bwabtak/raw/upload/v1767405761/%D8%A7_byleqs.json'];
-				for (const p of candidates){
-					try{
-						const res = await fetch(p);
-						if (!res.ok) { continue; }
-						const json = await res.json();
-						if (json && Array.isArray(json.products)){
-							productsCache = json;
-							break;
-						}
-					}catch(err){ /* ignore */ }
+
+				const CLOUDINARY_JSON_URL =
+					'https://res.cloudinary.com/bwabtak/raw/upload/v1767405761/%D8%A7_byleqs.json';
+
+				try {
+					const res = await fetch(CLOUDINARY_JSON_URL, { cache: 'no-store' });
+					if (!res.ok) throw new Error('فشل تحميل ملف المنتجات');
+
+					const json = await res.json();
+
+					// نفس البنية المطلوبة
+					if (json && Array.isArray(json.products)) {
+						productsCache = json;
+					} else {
+						productsCache = { products: [] };
+						console.error('بنية JSON غير صحيحة');
+					}
+
+				} catch (err) {
+					console.error('خطأ في تحميل المنتجات:', err);
+					productsCache = { products: [] };
 				}
+
 				return productsCache;
 			}
+
 
 			function normalizeDigits(s){ return String(s||'').replace(/[^0-9]/g,''); }
 
